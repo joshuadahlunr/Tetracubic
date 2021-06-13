@@ -129,6 +129,7 @@ PlayerSettings:
     Others: 1
   bundleVersion: 0.1
   preloadedAssets:
+  - {fileID: 0}
   - {fileID: 6196557960192202387, guid: 28f35bf5971b50c418ee6abf72f58250, type: 2}
   - {fileID: 0}
   - {fileID: -8344094218972376118, guid: 0ae415d5e93f3ee469e901c31c59df3b, type: 2}
