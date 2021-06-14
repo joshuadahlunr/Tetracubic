@@ -1,0 +1,118 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.XR.Interaction.Toolkit;
+using UnityEngine.InputSystem;
+
+public class RotateInteractable : XRBaseInteractable  {
+
+	// public override bool requireSelectExclusive { get { return false; } }
+
+	public LineRenderer line;
+	public ActionBasedController controllerA, controllerB;
+	public XRRayInteractor interactorA = null, interactorB = null;
+
+	// protected override void OnActivated(ActivateEventArgs args) {
+	// 	base.OnActivated(args);
+	// 	Debug.Log("OnActivate: " + args.interactor.name);
+	//
+	// 	XRRayInteractor rayInt = args.interactor as XRRayInteractor;
+	// 	if(rayInt == null) {
+	// 		Debug.Log(args.interactor.name + " is not a ray interactor!");
+	// 		return;
+	// 	}
+	//
+	// 	if(interactorA == null)
+	// 		interactorA = rayInt;
+	// 	else if(interactorB == null)
+	// 		interactorB = rayInt;
+	// }
+	//
+	// protected override void OnDeactivated(DeactivateEventArgs args) {
+	// 	base.OnDeactivated(args);
+	// 	Debug.Log("OnDeactivate: " + args.interactor.name);
+	//
+	// 	if(args.interactor == interactorA) interactorA = null;
+	// 	if(args.interactor == interactorB) interactorB = null;
+	// }
+	//
+	// protected override void OnHoverEntered(HoverEnterEventArgs args) {
+	// 	base.OnHoverEntered(args);
+	// 	Debug.Log("OnHoverEntered: " + args.interactor.name);
+	// }
+	//
+	// protected override void OnHoverExited(HoverExitEventArgs args) {
+	// 	base.OnHoverExited(args);
+	// 	Debug.Log("OnHoverExited: " + args.interactor.name);
+	// }
+	//
+	protected override void OnSelectEntered(SelectEnterEventArgs args) {
+		base.OnSelectEntered(args);
+		Debug.Log("OnSelectEntered: " + args.interactor.name);
+
+		XRRayInteractor rayInt = args.interactor as XRRayInteractor;
+		if(rayInt == null) {
+			Debug.Log(args.interactor.name + " is not a ray interactor!");
+			return;
+		}
+
+		if(interactorA == null){
+			interactorA = rayInt;
+			controllerA = rayInt.gameObject.GetComponent<ActionBasedController>();
+		} else if(interactorB == null) {
+			interactorB = rayInt;
+			controllerB = rayInt.gameObject.GetComponent<ActionBasedController>();
+		}
+	}
+
+	// protected override void OnSelectExited(SelectExitEventArgs args) {
+	// 	base.OnSelectExited(args);
+	// 	Debug.Log("OnSelectExited: " + args.interactor.name + " - " + args.isCanceled);
+	//
+	//
+	//
+	// 	if(args.interactor == interactorA && timeSinceSelectedA > .1) interactorA = null;
+	// 	if(args.interactor == interactorB && timeSinceSelectedB > .1) interactorB = null;
+	// }
+
+	void Update(){
+		// Don't bother updating if we aren't interacting with this object
+		if(interactorA == null && interactorB == null) return;
+
+		// If the select action is not currently pressed on controller A then remove it
+		if(controllerA && controllerA.selectAction.action.phase != InputActionPhase.Started){
+			interactorA = null;
+			controllerA = null;
+		}
+
+		// If the select action is not currently pressed on controller B then remove it
+		if(controllerB && controllerB.selectAction.action.phase != InputActionPhase.Started){
+			interactorB = null;
+			controllerB = null;
+		}
+
+		// If both interactors are set, and they have raycast positions...
+		if( interactorA != null && interactorB != null
+		  && interactorA.TryGetCurrent3DRaycastHit(out RaycastHit hitA) && interactorB.TryGetCurrent3DRaycastHit(out RaycastHit hitB) ){
+			// If A is not interacting with us then remove it
+			if(!hitA.transform.IsChildOf(transform)){
+  				interactorA = null;
+  				controllerA = null;
+  				return;
+  			}
+
+			// If B is not interacting wit us then remove it
+  			if(!hitB.transform.IsChildOf(transform)){
+  				interactorB = null;
+  				controllerB = null;
+  				return;
+  			}
+
+
+		// Otherwise just hide the line away
+		} else {
+			line.SetPosition(0, Vector3.zero);
+			line.SetPosition(1, Vector3.zero);
+		}
+	}
+}

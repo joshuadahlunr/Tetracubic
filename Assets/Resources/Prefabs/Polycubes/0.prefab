@@ -237,7 +237,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 956b897e1fbed4840bac3e0d4f91e4cf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _color: {r: 0.2066791, g: 1, b: 0, a: 0}
+  _color: {r: 0, g: 1, b: 0.05490196, a: 1}
   _isWireframe: 1
   wireframeMaterial: {fileID: 2100000, guid: 87965dddaefe8594ca724360ac1fe2c5, type: 2}
   backgroundMaterial: {fileID: 2100000, guid: 28d66feae6b7bab42a674777b6886c14, type: 2}
