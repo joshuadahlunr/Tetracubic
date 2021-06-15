@@ -94,7 +94,7 @@ public class DualControllerInteractable : XRBaseInteractable {
 	}
 
 	// Removes all of our references to a particular interactor
-	void removeInteractor(int index){
+	protected void removeInteractor(int index){
 		interactors[index] = null;
 		controllers[index] = null;
 	}
