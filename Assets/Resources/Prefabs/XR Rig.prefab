@@ -1263,7 +1263,6 @@ MonoBehaviour:
   componentsToDisable:
   - {fileID: 7541042447724320364}
   - {fileID: 7541042447724320362}
-  - {fileID: 0}
 --- !u!114 &7541042447724320364
 MonoBehaviour:
   m_ObjectHideFlags: 0

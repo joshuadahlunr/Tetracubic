@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.XR.Interaction.Toolkit;
 using UnityEngine.InputSystem;
 
+// Class which manages the positioning and rotation of a block. It uses two controllers, one for positioning and one for orientation.
 public class PlaceAndRotateInteractable : XRBaseInteractable {
 	[Serializable]
 	public struct ControllerInteractorPair{
@@ -15,24 +16,39 @@ public class PlaceAndRotateInteractable : XRBaseInteractable {
 	public static ControllerInteractorPair[] controllersInScene;
 
 	// The plane used to place the block
-	public GameObject placementPlane;
+	GameObject placementPlane;
 	// The block which is manipulated
-	public GameObject managedChild;
+	[SerializeField]
+	private GameObject _managedChild;
+	public GameObject managedChild {
+		get => _managedChild;
+		set {
+			_managedChild = value;
 
-	// Indexices of the controllers used for movement and rotation
+			// Unregister this with the interaction manager
+			enabled = false;
+			colliders.Clear();
+
+			// Make sure all of the child cubes are accepting raycasts and are considered a part of this object's collision
+			for(int i = 0; i < managedChild.transform.childCount; i++){
+				BoxCollider child = managedChild.transform.GetChild(i).gameObject.GetComponent<BoxCollider>();
+				child.gameObject.layer = 0;
+				colliders.Add(child);
+			}
+
+			// Reregister this with the interaction manager (makes sur)
+			enabled = true;
+		}
+	}
+
+	// Indices of the controllers used for movement and rotation
 	public int interactorIndex = -1, rotatorIndex = -1;
 	// The initial forward vector of the rotation controller
 	Vector3 controllerInitialForward;
 
 	void Start(){
 		placementPlane = transform.GetChild(0).gameObject;
-		managedChild = transform.GetChild(1).gameObject;
-
-		//gameObject.layer = 2; // Mark this object as raycast ignored
 		placementPlane.SetActive(false);
-
-		for(int i = 0; i < managedChild.transform.childCount; i++)
-			managedChild.transform.GetChild(i).gameObject.layer = 0; // Make sure all of the child cubes are accepting raycasts
 	}
 
 
@@ -40,6 +56,8 @@ public class PlaceAndRotateInteractable : XRBaseInteractable {
 	protected override void OnSelectEntered(SelectEnterEventArgs args) {
 		base.OnSelectEntered(args);
 
+		// Don't bother with this function if there is no managed child;
+		if(managedChild == null) return;
 		// Don't both with this function if we already have an interactor
 		if(interactorIndex > 0) return;
 
@@ -62,6 +80,8 @@ public class PlaceAndRotateInteractable : XRBaseInteractable {
 	}
 
 	void Update(){
+		// Don't bother with this function if there is no managed child;
+		if(managedChild == null) return;
 		// Don't bother with the update function if we don't have an interactor
 		if(interactorIndex < 0) return;
 
@@ -72,7 +92,7 @@ public class PlaceAndRotateInteractable : XRBaseInteractable {
 
 		// Look for another controller with the select button pressed... it will act as our rotator
 		if(rotatorIndex < 0)
-			// Figure out the index of the rotator (makeing sure to ignore the interactor)
+			// Figure out the index of the rotator (making sure to ignore the interactor)
 			for(int i = 0; i < controllersInScene.Length; i++){
 				if(i == interactorIndex) continue;
 
@@ -85,7 +105,6 @@ public class PlaceAndRotateInteractable : XRBaseInteractable {
 		// If we didn't find a rotation controller don't bother with the rest of this function
 		if(rotatorIndex < 0) return;
 
-		// transform.rotation = objectInitialRotation * Quaternion.FromToRotation(controllerInitialRotation, controllersInScene[rotatorIndex].controller.transform.rotation.eulerAngles);
 		managedChild.transform.rotation = controllersInScene[rotatorIndex].controller.transform.rotation * Quaternion.FromToRotation(controllerInitialForward, Vector3.up);
 	}
 
@@ -111,7 +130,6 @@ public class PlaceAndRotateInteractable : XRBaseInteractable {
 		controllersInScene[index].controller.selectAction.action.canceled += UnSetupInteractor;
 		controllersInScene[index].controller.selectAction.action.performed += UnSetupInteractor;
 
-		//gameObject.layer = 0; // Mark this object as raycast accepted
 		placementPlane.SetActive(true);
 		for(int i = 0; i < managedChild.transform.childCount; i++)
 			managedChild.transform.GetChild(i).gameObject.layer = 2; // Mark all of the children as raycast ignored
@@ -128,7 +146,6 @@ public class PlaceAndRotateInteractable : XRBaseInteractable {
 		// If the rotator index is set... nullify it as well
 		if(rotatorIndex >= 0) UnSetupRotator(new InputAction.CallbackContext());
 
-		// gameObject.layer = 2; // Mark this object as raycast ignored
 		placementPlane.SetActive(false);
 		for(int i = 0; i < managedChild.transform.childCount; i++)
 			managedChild.transform.GetChild(i).gameObject.layer = 0; // Mark all of the children as raycast accpeted
@@ -143,8 +160,6 @@ public class PlaceAndRotateInteractable : XRBaseInteractable {
 		controllersInScene[index].controller.selectAction.action.canceled += UnSetupRotator;
 		controllersInScene[index].controller.selectAction.action.performed += UnSetupRotator;
 
-		//controllerInitialRotation = controllersInScene[index].controller.transform.rotation.eulerAngles;
-		//objectInitialRotation = transform.rotation;
 		// TODO: Add a setting so that the player can adjust the angle of the controler in relation to their hand
 		// Save the forward vector of the controller
 		controllerInitialForward = controllersInScene[index].controller.transform.forward;
