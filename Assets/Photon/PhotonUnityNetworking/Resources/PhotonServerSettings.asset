@@ -43,6 +43,9 @@ MonoBehaviour:
   - RPC_updateChildren
   - RPC_setChildOfPlacer
   - RPC_detachFromParent
+  - RPC_StartPlacing
+  - RPC_NextTurn
+  - RPC_UpdatePlayerIndex
   DisableAutoOpenWizard: 1
   ShowSettings: 0
   DevRegionSetOnce: 1

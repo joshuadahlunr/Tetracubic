@@ -8,7 +8,7 @@ public class PolyCube : MonoBehaviour {
 	// Proton View for this cube
 	public PhotonView PV;
 	// Rigid body for this cube
-	public Rigidbody rigidbody;
+	new public Rigidbody rigidbody;
 
 	// The color of this cube
 	[SerializeField]
@@ -81,7 +81,7 @@ public class PolyCube : MonoBehaviour {
 	// Function which ensures that the block is properly childed to the object placer all across the network
 	public void setChildOfPlacer(){ PV.RPC("RPC_setChildOfPlacer", RpcTarget.AllBuffered); }
 	[PunRPC] void RPC_setChildOfPlacer(){
-		PlaceAndRotateInteractable placer = GameObject.Find("CubeInteractor").GetComponent<PlaceAndRotateInteractable>();
+		PlaceAndRotateInteractable placer = GameObject.Find("BlockPlacer").GetComponent<PlaceAndRotateInteractable>();
 
 		transform.localScale = new Vector3(.1f, .1f, .1f);
 		transform.parent = placer.transform;
@@ -91,7 +91,10 @@ public class PolyCube : MonoBehaviour {
 	// Function which detaches the block from the object placer all accross the network and then turns over control to the rigidbody.
 	public void detachFromParent(){ PV.RPC("RPC_detachFromParent", RpcTarget.AllBuffered); }
 	[PunRPC] void RPC_detachFromParent(){
-		transform.parent.gameObject.GetComponent<PlaceAndRotateInteractable>().managedChild = null;
+		Transform parent = transform.parent;
+		if(parent == null) return; // If the paren't doesn't exist simply skip the rest of this function
+
+		parent.gameObject.GetComponent<PlaceAndRotateInteractable>().managedChild = null;
 		transform.parent = null;
 
 		// Mark all of the children as raycast ignored
@@ -107,5 +110,8 @@ public class PolyCube : MonoBehaviour {
 			// Switch from wireframe to solid rendered
 			isWireframe = false;
 		}
+
+		// The block has been released and it is time to start the next turn;
+		NetworkManager.inst.NextTurn();
 	}
 }

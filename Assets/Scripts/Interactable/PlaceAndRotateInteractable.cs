@@ -16,7 +16,7 @@ public class PlaceAndRotateInteractable : XRBaseInteractable {
 	public static ControllerInteractorPair[] controllersInScene;
 
 	// The plane used to place the block
-	GameObject placementPlane;
+	public GameObject placementPlane;
 	// The block which is manipulated
 	[SerializeField]
 	private GameObject _managedChild;
@@ -29,12 +29,17 @@ public class PlaceAndRotateInteractable : XRBaseInteractable {
 			enabled = false;
 			colliders.Clear();
 
-			// Make sure all of the child cubes are accepting raycasts and are considered a part of this object's collision
-			for(int i = 0; i < managedChild.transform.childCount; i++){
-				BoxCollider child = managedChild.transform.GetChild(i).gameObject.GetComponent<BoxCollider>();
-				child.gameObject.layer = 0;
-				colliders.Add(child);
-			}
+			// Make sure all of the child cubes are accepting raycasts and are considered a part of this object's collision (but only if it is my turn)
+			if(managedChild != null && NetworkManager.isMyTurn()){
+				for(int i = 0; i < managedChild.transform.childCount; i++){
+					BoxCollider child = managedChild.transform.GetChild(i).gameObject.GetComponent<BoxCollider>();
+					child.gameObject.layer = 0;
+					colliders.Add(child);
+				}
+			// If it isn't my turn... mark the newly spawned object as raycast ignored
+			} else if(managedChild != null && !NetworkManager.isMyTurn())
+				for(int i = 0; i < managedChild.transform.childCount; i++)
+					managedChild.transform.GetChild(i).gameObject.layer = 2;
 
 			// Reregister this with the interaction manager (makes sur)
 			enabled = true;
