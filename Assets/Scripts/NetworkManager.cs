@@ -115,6 +115,9 @@ public class NetworkManager : MonoBehaviourPunCallbacks {
 		if(PhotonNetwork.IsConnected){
 			Debug.Log("Disconnecting...");
 
+			// Destroy all object and buffered events from this player!
+			PhotonNetwork.DestroyPlayerObjects(PhotonNetwork.LocalPlayer);
+
 			// Disconnect from the multiplayer server
 			PhotonNetwork.Disconnect();
 			// Wait and make sure that we have disconnected
