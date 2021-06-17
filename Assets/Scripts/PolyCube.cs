@@ -36,6 +36,11 @@ public class PolyCube : MonoBehaviour {
 	public Material wireframeMaterial;
 	public Material backgroundMaterial;
 
+	// Variable tracking how long the rigidbody has been asleep (-1 means we aren't checking yet)
+	float rigidbodySleepTimer = -1;
+	// Variable tracking if this object has been released yet or not
+	bool released = false;
+
     // Start is called before the first frame update
     void Start(){
 		updateChildren(_color, _isWireframe); // Make sure all of the children have had the new color settings applied
@@ -46,9 +51,15 @@ public class PolyCube : MonoBehaviour {
 		// Collisions with the placement plane are to be expected (ignore them)
 		if(collision.transform.name == "PlacementPlane") return;
 
-		Debug.Log(transform.name + " Has detached from its parent!");
-
-		detachFromParent();
+		// If we aren't detached from the parent and we aren't out of bounds... detach from the placer
+		if(!released && collision.transform.tag != "OutOfBounds"){
+			Debug.Log(transform.name + " Has detached from its parent!");
+			detachFromParent();
+		// When a block goes out of bounds... the player who's block went out of bounds looses the game
+		} else if(collision.transform.tag == "OutOfBounds"){
+			Debug.Log(transform.name + " Has Gone Out of Bounds!");
+			NetworkManager.inst.CurrentPlayerLost();
+		}
 	}
 
 	// Function which ensures that the color settings for this cube are synced over the network
@@ -111,7 +122,29 @@ public class PolyCube : MonoBehaviour {
 			isWireframe = false;
 		}
 
-		// The block has been released and it is time to start the next turn;
-		NetworkManager.inst.NextTurn();
+		// The block has been released, start checking for the rigidboy sleep (We don't want to start the next turn until the rigidbody has settled down/issleeping)
+		rigidbodySleepTimer = 0;
+		released = true;
+	}
+
+	// We use update to check that the rigidbody has been sleeping for half a second before starting the next turn. (Update doesn't do anything if we aren't checking for sleep time)
+	void Update(){
+		// Don't bother if we don't control this cube;
+		if(!PV.IsMine) return;
+		// Don't bother if we aren't checking for rigid body sleeping
+		if(rigidbodySleepTimer < 0) return;
+
+		// Update how long the rigid body has been asleep (reseting to 0 if it isn't asleep)
+		if(rigidbody.IsSleeping()) rigidbodySleepTimer += Time.deltaTime;
+		else rigidbodySleepTimer = 0;
+
+		// Once the rigidbody has been asleep for half a second
+		if(rigidbodySleepTimer > .5f){
+			// Stop checking if the rigid body is asleep
+			rigidbodySleepTimer = -1;
+			// Start the next turn
+			NetworkManager.inst.NextTurn();
+		}
+
 	}
 }

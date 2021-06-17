@@ -30,14 +30,14 @@ public class PlaceAndRotateInteractable : XRBaseInteractable {
 			colliders.Clear();
 
 			// Make sure all of the child cubes are accepting raycasts and are considered a part of this object's collision (but only if it is my turn)
-			if(managedChild != null && NetworkManager.isMyTurn()){
+			if(managedChild != null && NetworkManager.inst.isMyTurn()){
 				for(int i = 0; i < managedChild.transform.childCount; i++){
 					BoxCollider child = managedChild.transform.GetChild(i).gameObject.GetComponent<BoxCollider>();
 					child.gameObject.layer = 0;
 					colliders.Add(child);
 				}
 			// If it isn't my turn... mark the newly spawned object as raycast ignored
-			} else if(managedChild != null && !NetworkManager.isMyTurn())
+			} else if(managedChild != null && !NetworkManager.inst.isMyTurn())
 				for(int i = 0; i < managedChild.transform.childCount; i++)
 					managedChild.transform.GetChild(i).gameObject.layer = 2;
 

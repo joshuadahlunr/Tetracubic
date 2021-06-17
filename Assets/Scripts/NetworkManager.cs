@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Photon.Pun;
 using Photon.Realtime;
 
@@ -21,8 +22,17 @@ public class NetworkManager : MonoBehaviourPunCallbacks {
 	public PhotonView PV;
 
 	// The index of the current player in PhotonNetwork.PlayerList
-	static public int currentPlayerIndex = -1;
-	static public int currentPlayerID;
+	public int currentPlayerIndex = -1;
+	public int currentPlayerID;
+
+	// List of the players who have lost the game so far
+	public List<int> playersWhoHaveLost = new List<int>();
+
+	void Start(){
+		// Pretend we just joined the room if we are connected to the network when we start
+		if(PhotonNetwork.IsConnected)
+			NextTurn();
+	}
 
 	// When the host joins the room for the first time... start the first turn
 	public override void OnJoinedRoom(){
@@ -42,7 +52,10 @@ public class NetworkManager : MonoBehaviourPunCallbacks {
 
 		// Increment the player index (ensuring it stays within bounds)
 		if(PhotonNetwork.IsMasterClient){
-			currentPlayerIndex = (currentPlayerIndex + 1) % PhotonNetwork.PlayerList.Length;
+			do {
+				currentPlayerIndex = (currentPlayerIndex + 1) % PhotonNetwork.PlayerList.Length;
+			// This while loop ensures that it will never be the turn of any player who has lost the game
+			} while(playersWhoHaveLost.Contains(PhotonNetwork.PlayerList[currentPlayerIndex].ActorNumber));
 			UpdatePlayerIndex(); // Ensure that everyone is on the same page as the host about who's turn it is
 		}
 	}
@@ -57,10 +70,14 @@ public class NetworkManager : MonoBehaviourPunCallbacks {
 		currentPlayerID = PhotonNetwork.PlayerList[currentPlayerIndex].ActorNumber;
 
 		// Start the next turn
+		Debug.Log("Starting Next Turn");
 		OnTurnStartEvent();
 	}
 
 	public override void OnPlayerLeftRoom(Player otherPlayer){
+		// Remove the player who left from the list of players who have lost the game
+		playersWhoHaveLost.Remove(otherPlayer.ActorNumber);
+
 		// Don't bother unless we are the host;
 		if(!PhotonNetwork.IsMasterClient) return;
 
@@ -71,8 +88,22 @@ public class NetworkManager : MonoBehaviourPunCallbacks {
 		}
 	}
 
+	public void CurrentPlayerLost(){
+		playersWhoHaveLost.Add(currentPlayerID);
+
+		// TODO: Add UI element to alert player that they have lost
+
+		if(playersWhoHaveLost.Count >= PhotonNetwork.PlayerList.Length){
+			// The game is over
+			Debug.Log("The game is over!");
+
+			// Load the GameScene again
+			SceneManager.LoadScene(0);
+		}
+	}
+
 	// Function which returns true if it is this player's turn
-	public static bool isMyTurn(){
+	public bool isMyTurn(){
 		return currentPlayerID == PhotonNetwork.LocalPlayer.ActorNumber;
 	}
 

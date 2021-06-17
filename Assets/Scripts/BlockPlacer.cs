@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Photon.Pun;
 using Photon.Realtime;
+using UnityEngine.InputSystem;
 
 // Spawns blocks which are synchronized over the network
 public class BlockPlacer : MonoBehaviour {
@@ -16,7 +17,7 @@ public class BlockPlacer : MonoBehaviour {
 
 	public bool isPlacing = false;
 	// The ammount of time (in seconds) it takes for the placer to go from the top to the bottom of the region
-	public float timeToDrop = 20;
+	public float timeToDrop = 10;
 
 	void Awake() {
 		// Make sure that all of the prefabs have their names properly stripped of path components that will cause them to incorrectly load
@@ -45,7 +46,7 @@ public class BlockPlacer : MonoBehaviour {
 		transform.position = new Vector3(0, 2, 0); // This needs to happen for everyone so that the player whoes turn it is has their placer at the top of the world
 
 		// If it is our turn... spawn a block
-		if(NetworkManager.currentPlayerID == PhotonNetwork.LocalPlayer.ActorNumber)
+		if(NetworkManager.inst.currentPlayerID == PhotonNetwork.LocalPlayer.ActorNumber)
 			SpawnBlock(Random.Range(0, prefabPaths.Length));
 	}
 
@@ -57,8 +58,15 @@ public class BlockPlacer : MonoBehaviour {
 		pos.y -= 2f/timeToDrop /* distance/time */ * Time.deltaTime;
 		transform.position = pos;
 
-		// Don't bother if we aren't the host
-		if(!PhotonNetwork.IsMasterClient) return;
+		// Don't bother if it isn't my turn
+		if(!NetworkManager.inst.isMyTurn()) return;
+
+		// If the player is holding either one of their activated triggers, then drop the block very quickly
+		if(placeAndRotateInteractable.interactorIndex >= 0 && PlaceAndRotateInteractable.controllersInScene[placeAndRotateInteractable.interactorIndex].controller.activateAction.action.phase == InputActionPhase.Started
+		  || placeAndRotateInteractable.rotatorIndex >= 0 && PlaceAndRotateInteractable.controllersInScene[placeAndRotateInteractable.rotatorIndex].controller.activateAction.action.phase == InputActionPhase.Started)
+			timeToDrop = 1;
+		else
+			timeToDrop = 10;
 
 	}
 
