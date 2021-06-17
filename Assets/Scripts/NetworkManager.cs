@@ -97,7 +97,7 @@ public class NetworkManager : MonoBehaviourPunCallbacks {
 			// The game is over
 			Debug.Log("The game is over!");
 
-			// Load the GameScene again
+			// Load the MenuScene again
 			SceneManager.LoadScene(0);
 		}
 	}
