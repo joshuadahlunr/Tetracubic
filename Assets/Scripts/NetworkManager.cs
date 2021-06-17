@@ -72,6 +72,9 @@ public class NetworkManager : MonoBehaviourPunCallbacks {
 		// Start the next turn
 		Debug.Log("Starting Next Turn");
 		OnTurnStartEvent();
+
+		if(isMyTurn())
+			StartCoroutine(ShowTurnMessageForSeconds(3));
 	}
 
 	public override void OnPlayerLeftRoom(Player otherPlayer){
@@ -90,16 +93,55 @@ public class NetworkManager : MonoBehaviourPunCallbacks {
 
 	public void CurrentPlayerLost(){
 		playersWhoHaveLost.Add(currentPlayerID);
-
-		// TODO: Add UI element to alert player that they have lost
+		// Display a message to the player reminding them that they have lost
+		ShowLostMessage();
 
 		if(playersWhoHaveLost.Count >= PhotonNetwork.PlayerList.Length){
 			// The game is over
 			Debug.Log("The game is over!");
 
 			// Load the MenuScene again
-			SceneManager.LoadScene(0);
+			EndGame();
 		}
+	}
+
+	void EndGame(){ PV.RPC("RPC_EndGame", RpcTarget.AllBuffered); }
+	[PunRPC] void RPC_EndGame(){ StartCoroutine(LoadMenuAfterSeconds(5)); }
+
+	public IEnumerator LoadMenuAfterSeconds(int seconds){
+		// Wait 5 seconds
+		yield return new WaitForSeconds(seconds);
+
+		if(PhotonNetwork.IsConnected){
+			Debug.Log("Disconnecting...");
+
+			// Disconnect from the multiplayer server
+			PhotonNetwork.Disconnect();
+			// Wait and make sure that we have disconnected
+			// while (PhotonNetwork.IsConnected){
+			// 	Debug.Log("Still connected!");
+	    	// 	yield return null;
+			// }
+
+			Debug.Log("Disconnected from Photon!");
+		}
+
+		// Load the menu scene
+		SceneManager.LoadScene(0);
+	}
+
+	IEnumerator ShowTurnMessageForSeconds(int seconds){
+		GameObject yourTurn = XRRigSpawner.spawnedRig.transform.GetChild(0).GetChild(0).GetChild(0).gameObject;
+		yourTurn.SetActive(true);
+
+		yield return new WaitForSeconds(seconds);
+
+		yourTurn.SetActive(false);
+	}
+
+	void ShowLostMessage(){
+		GameObject youLost = XRRigSpawner.spawnedRig.transform.GetChild(0).GetChild(0).GetChild(1).gameObject;
+		youLost.SetActive(true);
 	}
 
 	// Function which returns true if it is this player's turn

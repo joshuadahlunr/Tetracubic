@@ -133,7 +133,7 @@ GameObject:
   m_Component:
   - component: {fileID: 117225126}
   - component: {fileID: 117225127}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: West
   m_TagString: OutOfBounds
   m_Icon: {fileID: 0}
@@ -547,6 +547,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   PV: {fileID: 1213231128}
+  currentPlayerIndex: -1
+  currentPlayerID: 0
+  playersWhoHaveLost: 
 --- !u!4 &1213231127
 Transform:
   m_ObjectHideFlags: 0
@@ -651,7 +654,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1559483137}
   - component: {fileID: 1559483138}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: South
   m_TagString: OutOfBounds
   m_Icon: {fileID: 0}
@@ -1006,7 +1009,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1992253407}
   - component: {fileID: 1992253408}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: East
   m_TagString: OutOfBounds
   m_Icon: {fileID: 0}
@@ -1050,7 +1053,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2031513549}
   - component: {fileID: 2031513550}
-  m_Layer: 0
+  m_Layer: 2
   m_Name: North
   m_TagString: OutOfBounds
   m_Icon: {fileID: 0}
